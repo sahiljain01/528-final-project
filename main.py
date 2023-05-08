@@ -58,7 +58,7 @@ def find_aug_path(g, matching, root=-1):
     i = 0
     num[root] = i
     po[root] = -1
-    pe[root] = 0
+    pe[root] = root
     s1 = [(i, False)]
     s2 = []
     u = root
@@ -133,7 +133,7 @@ def find_aug_path(g, matching, root=-1):
             # TODO: backtracing, look for tuples
             backtrace.append(v)
             parity = "odd"
-            curr = v
+            curr = u
             while curr != root:
                 if parity == "odd":
                     curr = po[curr]
@@ -142,7 +142,6 @@ def find_aug_path(g, matching, root=-1):
                     curr = pe[curr]
                     parity = "odd"
                 backtrace.append(curr)
-            
             return
         elif v in num:
             # 5.
@@ -194,7 +193,7 @@ def find_aug_path(g, matching, root=-1):
     if not path_exists:
         return "no augmenting path"
     else:
-        return backtrace
+        return list(reversed(backtrace))
 
 
     
@@ -210,6 +209,7 @@ adj_list = {
 
 g = Graph(adj_list)
 matching = [(1,2)]
+print()
 print(find_aug_path(g, matching))
 
 
