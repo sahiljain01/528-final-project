@@ -154,6 +154,7 @@ def find_aug_path(g, matching, root=-1):
                         curr = mid
                         trace = [start]
                         par = "odd" if pe[start] == mid else "even"
+                        res = po[start] if pe[start] == mid else pe[start]
                         while curr != old:
                             trace.append(curr)
                             if par == "odd":
@@ -167,7 +168,7 @@ def find_aug_path(g, matching, root=-1):
                             backtrace.append(x)
                         if start == root:
                             return
-                        curr = start
+                        curr = res
                 else:
                     curr = pe[curr]
                     parity = "odd"
@@ -233,17 +234,24 @@ def find_aug_path(g, matching, root=-1):
     
 
 adj_list = {
-    0: [1, 4],
-    1: [0, 4, 2],
-    2: [1, 5, 3],
-    3: [2, 4],
-    4: [0, 1, 3],
-    5: [2],
+    0: [1],
+    1: [0, 2],
+    2: [1, 3, 12],
+    3: [13, 4, 2],
+    4: [3, 5, 8],
+    5: [4, 6],
+    6: [5, 7],
+    7: [6, 8, 9],
+    8: [4, 7],
+    9: [7, 10],
+    10: [9, 11],
+    11: [10, 12],
+    12: [2, 11],
 }
 
 
 g = Graph(adj_list)
-matching = [(0,4), (1, 2)]
+matching = [(1,2), (11, 12), (9, 10), (7, 8), (5, 6), (3, 4)]
 print()
 print(find_aug_path(g, matching))
 
