@@ -106,7 +106,9 @@ def find_aug_path(g, matching, root=-1):
             # go to 8
             handle_empty(i)
         elif not flagY:
-            po[y] = x
+            # if p0[y] is not a tuple
+            if type(po[y]) != tuple:
+                po[y] = x
             pe[z] = y
             s2.append(s1.pop())
             s2.append(s1.pop())
@@ -163,6 +165,9 @@ def find_aug_path(g, matching, root=-1):
                         trace = list(reversed(trace))
                         for x in trace:
                             backtrace.append(x)
+                        if start == root:
+                            return
+                        curr = start
                 else:
                     curr = pe[curr]
                     parity = "odd"
