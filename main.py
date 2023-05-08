@@ -65,6 +65,8 @@ def find_aug_path(g, matching, root=-1):
     examined_edges = set()
     path_exists = True
     backtrace = []
+    print("root is ")
+    print(root)
 
     def get_rand_unexamined(n):
         edges = g.get_neighbors(n)
@@ -134,6 +136,8 @@ def find_aug_path(g, matching, root=-1):
             backtrace.append(v)
             parity = "odd"
             curr = u
+            if curr == root:
+                backtrace.append(root)
             while curr != root:
                 if parity == "odd":
                     curr = po[curr]
@@ -199,11 +203,10 @@ def find_aug_path(g, matching, root=-1):
     
 
 adj_list = {
-    1: [2, 3],
-    2: [1, 3, 4],
-    3: [1, 2],
-    4: [2, 5],
-    5: [4]
+    1: [2],
+    2: [1, 3],
+    3: [2, 4],
+    4: [3],
 }
 
 
