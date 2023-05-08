@@ -1,30 +1,17 @@
 import random
 
+EVEN = "even"
+ODD = "odd"
+
 class Graph:
     def __init__(self, adj_list=None):
         self.adj_list = adj_list if adj_list else {}
-    
-    def add_edge(self, u, v):
-        if u not in self.adj_list:
-            self.adj_list[u] = []
-        if v not in self.adj_list:
-            self.adj_list[v] = []
-        self.adj_list[u].append(v)
-        self.adj_list[v].append(u)
-    
-    def remove_edge(self, u, v):
-        if u in self.adj_list and v in self.adj_list[u]:
-            self.adj_list[u].remove(v)
-            self.adj_list[v].remove(u)
     
     def get_neighbors(self, u):
         if u in self.adj_list:
             return self.adj_list[u]
         else:
             return []
-    
-    def has_edge(self, u, v):
-        return u in self.adj_list and v in self.adj_list[u]
     
     def get_vertices(self):
         return list(self.adj_list.keys())
@@ -59,14 +46,16 @@ def find_aug_path(g, matching, root=-1):
     num[root] = i
     po[root] = -1
     pe[root] = root
+    # stacks contain tuples with flags
     s1 = [(root, False)]
     s2 = []
     u = root
     examined_edges = set()
+    # set to false if no augmenting path found
     path_exists = True
+    # built out when augmenting path is found
     backtrace = []
-    print("root is ")
-    print(root)
+    print("root is " + str(root))
 
     def get_rand_unexamined(n):
         edges = g.get_neighbors(n)
@@ -118,13 +107,53 @@ def find_aug_path(g, matching, root=-1):
             s1.pop()
             # 7. 
             if num[z] > num[v]:
-                print("setting tuple for " + str(z))
                 po[z] = (x, y)
                 z = matched_dict[z]
                 handle_blossom(z, v, i)
             else:
                 # go to 8
                 handle_empty(i)
+
+    # the backtrace
+    def build_aug_path(v, u):
+        backtrace.append(v)
+        parity = EVEN
+        curr = u
+        while curr != root:
+            backtrace.append(curr)
+            if parity == ODD:
+                old = curr
+                curr = po[curr]
+                parity = EVEN
+
+                # check if curr is tuple start*(mid), if so do a backtrace of blossom
+                if type(curr) == tuple:
+                    (start, mid) = curr
+                    curr = mid
+                    trace = [start]
+                    blossomParity = ODD if pe[start] == mid else EVEN
+                    # where the rest of the backtrace should continue
+                    res = po[start] if pe[start] == mid else pe[start]
+                    while curr != old:
+                        trace.append(curr)
+                        if blossomParity == ODD:
+                            curr = po[curr]
+                            blossomParity = EVEN
+                        else:
+                            curr = pe[curr]
+                            blossomParity = ODD
+                    trace = list(reversed(trace))
+                    for x in trace:
+                        backtrace.append(x)
+                    if start == root:
+                        # backtrace is finished
+                        return
+                    curr = res
+
+            else:
+                curr = pe[curr]
+                parity = ODD
+        backtrace.append(root)
 
 
     # 3.
@@ -135,44 +164,7 @@ def find_aug_path(g, matching, root=-1):
         examined_edges.add((v,u))
         if v != root and v not in matched:
             # we've found an aug path
-            # TODO: backtracing, look for tuples
-            backtrace.append(v)
-            parity = "even"
-            curr = u
-            print(po)
-            print(pe)
-            while curr != root:
-                backtrace.append(curr)
-                if parity == "odd":
-                    old = curr
-                    curr = po[curr]
-                    parity = "even"
-                    # check if curr is tuple
-                    if type(curr) == tuple:
-                        print("special trace")
-                        (start, mid) = curr
-                        curr = mid
-                        trace = [start]
-                        par = "odd" if pe[start] == mid else "even"
-                        res = po[start] if pe[start] == mid else pe[start]
-                        while curr != old:
-                            trace.append(curr)
-                            if par == "odd":
-                                curr = po[curr]
-                                par = "even"
-                            else:
-                                curr = pe[curr]
-                                par = "odd"
-                        trace = list(reversed(trace))
-                        for x in trace:
-                            backtrace.append(x)
-                        if start == root:
-                            return
-                        curr = res
-                else:
-                    curr = pe[curr]
-                    parity = "odd"
-            backtrace.append(root)
+            build_aug_path(v, u)
             return
         elif v in num:
             # 5.
@@ -198,14 +190,14 @@ def find_aug_path(g, matching, root=-1):
             u = mv
             examined_edges.add((mv,v))
             examined_edges.add((v,mv))
-            print((v,mv))
+            print("traversing edge " + str((v,mv)))
             expand_subgraph(u, i)
 
     # 1. check if there is an unexamined edge
     def expand_subgraph(u, i):
         (u, flagU) = s1[-1]
         e = get_rand_unexamined(u)
-        print(e)
+        print("traversing edge " + str(e))
         if e == None:
             # 2. if u has marker, delete u from both stacks and go to 8
             #    otherwise, del top 2 of S1 and go to 1
@@ -231,55 +223,15 @@ def find_aug_path(g, matching, root=-1):
         return list(reversed(backtrace))
 
 
-    
-
-# adj_list = {
-#     0: [1],
-#     1: [0, 2],
-#     2: [1, 3, 12],
-#     3: [13, 4, 2],
-#     4: [3, 5, 8],
-#     5: [4, 6],
-#     6: [5, 7],
-#     7: [6, 8, 9],
-#     8: [4, 7],
-#     9: [7, 10],
-#     10: [9, 11],
-#     11: [10, 12],
-#     12: [2, 11],
-#     13: [3]
-# }
-
-
-# g = Graph(adj_list)
-# matching = [(1,2), (11, 12), (9, 10), (7, 8), (5, 6), (3, 4)]
-# print()
-# print(find_aug_path(g, matching))
-
-
 adj_list = {
-    1: [2, 7],
-    2: [1, 3],
-    3: [2, 4, 5],
-    4: [3, 5],
-    5: [3, 4, 6],
-    6: [5, 8, 15],
-    7: [1, 8, 9],
-    8: [6, 7, 9],
-    9: [7, 8],
-    10: [11, 16],
-    11: [10, 12],
-    12: [11, 13, 14],
-    13: [12, 14],
-    14: [12, 13, 15],
-    15: [6, 14, 17],
-    16: [10, 17, 18],
-    17: [15, 16, 18],
-    18: [16, 17],
+    1: [2, 3],
+    2: [1, 3, 5],
+    3: [1, 2, 4],
+    4: [3, 5, 6],
+    5: [2, 4],
+    6: [4]
 }
 
-
 g = Graph(adj_list)
-matching = [(1,2), (3, 4), (5, 6), (7, 8), (10, 11), (12, 13), (14, 15), (16, 17)]
-print()
+matching = [(2,3), (4,5)]
 print(find_aug_path(g, matching))
