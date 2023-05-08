@@ -59,7 +59,7 @@ def find_aug_path(g, matching, root=-1):
     num[root] = i
     po[root] = -1
     pe[root] = root
-    s1 = [(i, False)]
+    s1 = [(root, False)]
     s2 = []
     u = root
     examined_edges = set()
@@ -116,6 +116,7 @@ def find_aug_path(g, matching, root=-1):
             s1.pop()
             # 7. 
             if num[z] > num[v]:
+                print("setting tuple for " + str(z))
                 po[z] = (x, y)
                 z = matched_dict[z]
                 handle_blossom(z, v, i)
@@ -134,18 +135,38 @@ def find_aug_path(g, matching, root=-1):
             # we've found an aug path
             # TODO: backtracing, look for tuples
             backtrace.append(v)
-            parity = "odd"
+            parity = "even"
             curr = u
-            if curr == root:
-                backtrace.append(root)
+            print(po)
+            print(pe)
             while curr != root:
+                backtrace.append(curr)
                 if parity == "odd":
+                    old = curr
                     curr = po[curr]
                     parity = "even"
+                    # check if curr is tuple
+                    if type(curr) == tuple:
+                        print("special trace")
+                        (start, mid) = curr
+                        curr = mid
+                        trace = [start]
+                        par = "odd" if pe[start] == mid else "even"
+                        while curr != old:
+                            trace.append(curr)
+                            if par == "odd":
+                                curr = po[curr]
+                                par = "even"
+                            else:
+                                curr = pe[curr]
+                                par = "odd"
+                        trace = list(reversed(trace))
+                        for x in trace:
+                            backtrace.append(x)
                 else:
                     curr = pe[curr]
                     parity = "odd"
-                backtrace.append(curr)
+            backtrace.append(root)
             return
         elif v in num:
             # 5.
@@ -161,32 +182,36 @@ def find_aug_path(g, matching, root=-1):
             num[v] = i
             po[v] = u
             pe[v] = -1
-            s1.append((i, False))
+            s1.append((v, False))
             mv = matched_dict[v]
             pe[mv] = v
             i += 1
             num[mv] = i
             po[mv] = -1
-            s1.append((i, False))
+            s1.append((mv, False))
             u = mv
+            examined_edges.add((mv,v))
+            examined_edges.add((v,mv))
+            print((v,mv))
             expand_subgraph(u, i)
 
     # 1. check if there is an unexamined edge
     def expand_subgraph(u, i):
+        (u, flagU) = s1[-1]
         e = get_rand_unexamined(u)
         print(e)
         if e == None:
             # 2. if u has marker, delete u from both stacks and go to 8
             #    otherwise, del top 2 of S1 and go to 1
-            oldU = u
-            (u, flagU) = s1[-1]
-            assert(u==oldU)
             if flagU:
                 s1.pop()
                 s2.pop()
                 handle_empty(i)
             else:
                 s1.pop()
+                if (len(s1) < 2):
+                    path_exists = False
+                    return
                 s1.pop()
                 expand_subgraph(u, i)
         else:
@@ -194,7 +219,7 @@ def find_aug_path(g, matching, root=-1):
 
     expand_subgraph(u, i)
 
-    if not path_exists:
+    if not path_exists or len(backtrace) == 0:
         return "no augmenting path"
     else:
         return list(reversed(backtrace))
@@ -203,15 +228,17 @@ def find_aug_path(g, matching, root=-1):
     
 
 adj_list = {
-    1: [2],
-    2: [1, 3],
+    0: [1, 4],
+    1: [0, 4, 2],
+    2: [1, 5, 3],
     3: [2, 4],
-    4: [3],
+    4: [0, 1, 3],
+    5: [2],
 }
 
 
 g = Graph(adj_list)
-matching = [(1,2)]
+matching = [(0,4), (1, 2)]
 print()
 print(find_aug_path(g, matching))
 
